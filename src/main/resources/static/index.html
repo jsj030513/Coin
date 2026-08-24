@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="업비트·빗썸 차익거래 대시보드">
+    <title>ARB//KOREA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/safety.css"><script src="/js/security.js"></script><script src="/js/app.js" defer></script><script src="/js/safety.js" defer></script>
+</head>
+<body>
+<div class="ambient ambient-one"></div>
+<div class="ambient ambient-two"></div>
+<header class="topbar">
+    <a class="brand" href="#">
+        <span class="brand-mark">A//</span>
+        <span>ARB KOREA</span>
+    </a>
+    <div class="topbar-actions">
+        <a class="page-link" href="/my">MY PAGE</a>
+        <a class="page-link" href="/accounts">ACCOUNTS</a>
+        <a class="page-link" href="/live-orders">LIVE ORDERS</a>
+        <form class="logout-form" action="/logout" method="post"><button class="page-link logout-link" type="submit">LOGOUT</button></form>
+        <div id="tradingStatePill" class="safety-pill"><span></span> AUTO OFF</div>
+        <button id="scanButton" class="scan-button" type="button">지금 스캔</button>
+    </div>
+</header>
+
+<main>
+    <section class="hero">
+        <div>
+            <p class="eyebrow">DOMESTIC MARKET MONITOR</p>
+            <h1>가격의 틈을<br><em>실시간으로.</em></h1>
+            <p class="hero-copy">업비트와 빗썸의 공통 KRW 마켓을 비교하고 실제 호가 잔량과 수수료를 반영합니다.</p>
+        </div>
+        <div class="radar-card">
+            <div class="radar-head">
+                <span>LIVE SCAN</span>
+                <span id="scanState" class="state">연결 중</span>
+            </div>
+            <div class="radar">
+                <div class="radar-ring ring-one"></div>
+                <div class="radar-ring ring-two"></div>
+                <div class="radar-line"></div>
+                <div class="exchange-dot upbit"><span>UP</span></div>
+                <div class="exchange-dot bithumb"><span>BT</span></div>
+            </div>
+            <div class="radar-foot">
+                <div><strong id="commonCount">—</strong><span>2곳+ 공통 마켓</span></div>
+                <div><strong id="lastScan">—</strong><span>최근 완료</span></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="metrics" aria-label="핵심 지표">
+        <article class="metric-card accent">
+            <span class="metric-label">최고 예상 수익률</span>
+            <strong id="bestProfit">—</strong>
+            <small>수수료 차감 후</small>
+        </article>
+        <article class="metric-card">
+            <span class="metric-label">탐지 이력</span>
+            <strong id="opportunityCount">—</strong>
+            <small>최근 100건</small>
+        </article>
+    </section>
+
+    <section class="system-status-panel panel" aria-label="서버 실행 상태">
+        <div class="panel-head"><div><p class="eyebrow">SYSTEM HEALTH</p><h2>24시간 실행 상태</h2></div><span id="systemHealthBadge" class="editable-badge">확인 중</span></div>
+        <div class="system-status-grid">
+            <article><span>시장 스캔</span><strong id="healthScan">—</strong><small id="healthScanDetail">확인 중</small></article>
+            <article><span>거래소 연결</span><strong id="healthConnections">—</strong><small>업비트 · 빗썸</small></article>
+            <article><span>자동거래</span><strong id="healthTrading">—</strong><small id="healthTradingDetail">사용자 스위치</small></article>
+            <article><span>최근 앱 주문</span><strong id="healthLastOrder">—</strong><small id="healthLastOrderDetail">주문 기록 없음</small></article>
+            <article><span>서버 가동시간</span><strong id="healthUptime">—</strong><small id="healthServerTime">서버 시각 확인 중</small></article>
+        </div>
+    </section>
+
+    <section class="content-grid">
+        <article class="panel opportunities-panel">
+            <div class="panel-head">
+                <div>
+                    <p class="eyebrow">ORDERBOOK VERIFIED</p>
+                    <h2>차익 기회</h2>
+                </div>
+                <span id="opportunityBadge" class="count-badge">0</span>
+            </div>
+            <div class="table-wrap scroll-table opportunities-scroll" tabindex="0" aria-label="차익 기회 목록">
+                <table>
+                    <thead><tr><th>마켓</th><th>경로</th><th>예상 체결가</th><th>수익률</th><th>코인 1개 예상수익</th><th>시각</th></tr></thead>
+                    <tbody id="opportunityRows"><tr><td colspan="6" class="empty">데이터를 불러오는 중입니다.</td></tr></tbody>
+                </table>
+            </div>
+        </article>
+
+        <aside class="panel settings-panel">
+            <div class="panel-head"><div><p class="eyebrow">GUARDRAILS</p><h2>리스크 설정</h2></div><span class="editable-badge">EDITABLE</span></div>
+            <form id="riskSettingsForm" class="risk-form">
+                <div class="capital-helper">
+                    <strong>처음 설정 도우미</strong>
+                    <p>전체 운용금액을 입력하면 원금에 맞춰 운용 코인 수와 주문금액·최소 현금·수익 기준을 자동 계산합니다.</p>
+                    <label><span>전체 운용 예정금액</span><div><input id="plannedCapitalKrw" type="number" min="50000" step="10000" placeholder="예: 200000"><em>원</em></div></label>
+                    <label><span>운용할 코인 수</span><div><input id="plannedSymbolCount" type="number" min="1" max="10" value="5" readonly><em>자동</em></div></label>
+                    <label><span>각 거래소에 남겨둘 최소 현금</span><div><input id="minExchangeKrw" type="number" min="0" step="5000" placeholder="자동 계산"><em>원</em></div></label>
+                    <button id="applyCapitalGuide" type="button">코인 수 자동 계산해서 적용</button>
+                    <small id="capitalGuideResult">최소 권장 운용금액도 함께 안내합니다.</small>
+                </div>
+                <div class="preset-grid" role="group" aria-label="리스크 프리셋">
+                    <button class="preset-card" type="button" data-profile="CONSERVATIVE"><strong>소극적</strong><small>높은 거래대금<br>긴 쿨다운</small></button>
+                    <button class="preset-card" type="button" data-profile="BALANCED"><strong>중간</strong><small>수익과 안전성<br>균형 설정</small></button>
+                    <button class="preset-card" type="button" data-profile="AGGRESSIVE"><strong>공격적</strong><small>더 많은 기회<br>큰 변동 허용</small></button>
+                    <button class="preset-card user-preset" type="button" data-profile="USER_1"><strong>사용자 1</strong><small>내가 조정해<br>저장한 설정</small></button>
+                </div>
+                <p id="profileHint" class="profile-hint">리스크 유형을 선택하세요.</p>
+                <label><span>거래량이 충분한 코인만 보기</span><small>하루 거래금액이 이 값보다 큰 코인만 선택합니다.</small><div><input id="minQuoteVolume24h" type="number" min="0" step="100000000" required><em>원</em></div></label>
+                <label><span>거래를 시작할 최소 수익률</span><small>수수료를 뺀 예상 수익률이 이 값 이상일 때만 거래합니다.</small><div><input id="minProfitPercent" type="number" min="0" max="100" step="0.1" required><em>%</em></div></label>
+                <label><span>한 번 거래할 때 최소 이익</span><small>예상 이익이 이 금액보다 작으면 거래하지 않습니다.</small><div><input id="minExpectedProfitKrw" type="number" min="0" max="100000000" step="1" required><em>원</em></div></label>
+                <label><span>비정상 가격 차이 제외 기준</span><small>너무 큰 가격 차이는 오류일 수 있어 제외합니다.</small><div><input id="maxProfitPercent" type="number" min="0.1" max="1000" step="0.1" required><em>%</em></div></label>
+                <label><span>기본 거래 수수료(예비값)</span><small>계정별 실제 수수료를 확인하지 못했을 때만 사용합니다.</small><div><input id="feePercent" type="number" min="0" max="5" step="0.01" required><em>%</em></div></label>
+                <label><span>수익 기회를 계산할 기준금액</span><small>이 금액으로 샀을 때의 예상 이익을 계산합니다.</small><div><input id="orderAmountKrw" type="number" min="5000" max="100000000" step="1000" required><em>원</em></div></label>
+                <label><span>한 번에 주문할 최대금액</span><small>한 번의 자동거래에서 사용할 수 있는 상한입니다.</small><div><input id="maxOrderAmountKrw" type="number" min="5000" max="100000000" step="1000" required><em>원</em></div></label>
+                <label><span>하루 손실 정지 기준</span><small>오늘 손실 합계가 이 금액에 도달하면 자동 정지합니다.</small><div><input id="dailyMaxLossKrw" type="number" min="0" max="1000000000" step="1000" required><em>원</em></div></label>
+                <label><span>동시에 진행할 거래 수</span><small>처음에는 1개가 가장 안전합니다.</small><div><input id="maxConcurrentPositions" type="number" min="1" max="20" step="1" required><em>개</em></div></label>
+                <label><span>같은 코인 다시 거래하기까지 대기</span><small>짧을수록 거래는 많지만 과도한 반복 위험이 커집니다.</small><div><input id="opportunityCooldownSeconds" type="number" min="0" max="86400" step="1" required><em>초</em></div></label>
+                <button id="saveSettingsButton" class="settings-save" type="submit">설정 저장</button>
+                <small id="settingsSavedAt" class="saved-at">DB 설정을 불러오는 중</small>
+            </form>
+            <div class="live-lock">
+                <div id="tradingLockIcon" class="lock-icon">×</div>
+                <div><strong id="tradingStateTitle">자동 차익거래 꺼짐</strong><span id="tradingStateDescription">사용자 스위치 상태를 확인 중입니다.</span></div>
+            </div>
+            <button id="tradingToggleButton" class="settings-save" type="button">자동 차익거래 켜기</button>
+            <button id="telegramTestButton" class="settings-save notification-test" type="button">텔레그램 테스트 알림</button>
+        </aside>
+    </section>
+
+</main>
+
+<footer>
+    <span>ARB//KOREA</span>
+    <span>업비트 · 빗썸 · 입출금 권한 미사용</span>
+</footer>
+
+<div id="toast" class="toast" role="status"></div>
+</body>
+</html>

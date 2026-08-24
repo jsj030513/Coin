@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="실제 거래소 자산과 주문 기록">
+    <title>MY//ARB — 내 자산</title>
+
+
+    <link rel="stylesheet" href="/css/app.css"><link rel="stylesheet" href="/css/my.css"><link rel="stylesheet" href="/css/safety.css">
+    <script src="/js/security.js"></script><script src="/js/my.js" defer></script><script src="/js/safety.js" defer></script>
+</head>
+<body>
+<div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+<header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark">A//</span><span>ARB KOREA</span></a>
+    <nav class="topbar-actions"><a class="page-link" href="/">MARKET</a><a class="page-link active" href="/my">MY PAGE</a><a class="page-link" href="/accounts">ACCOUNTS</a><a class="page-link" href="/live-orders">LIVE ORDERS</a><form class="logout-form" action="/logout" method="post"><button class="page-link logout-link" type="submit">LOGOUT</button></form><div class="safety-pill"><span></span> LIVE ASSETS</div></nav>
+</header>
+<main class="my-main">
+    <section class="my-hero">
+        <div><p class="eyebrow">EXCHANGE ASSETS</p><h1>내 자산을<br><em>한눈에.</em></h1><p>업비트와 빗썸 API에서 조회한 실제 보유 자산입니다.</p></div>
+        <div class="balance-hero"><span>현재 총 평가액</span><strong id="currentBalance">—</strong><small id="balanceDelta">불러오는 중</small></div>
+    </section>
+
+    <section class="personal-metrics" aria-label="투자 원금과 손익 요약">
+        <article class="personal-card principal-card"><span>현재 투자 원금</span><strong id="principalKrw">—</strong><small>외부에서 새로 넣은 돈만 포함</small></article>
+        <article class="personal-card net-card"><span>누적 손익 / 수수료 반영</span><strong id="netProfitKrw">—</strong><small id="netProfitDetail">거래 손익 - 직접 입력 수수료</small></article>
+        <article class="personal-card"><span>원금 대비 수익률</span><strong id="returnPercent">—</strong><small>누적 순수익 ÷ 투자 원금</small></article>
+        <article class="personal-card"><span>오늘 순수익</span><strong id="todayNetProfitKrw">—</strong><small>오늘 거래 손익 - 오늘 수수료</small></article>
+        <article class="personal-card"><span>송금 수수료 횟수</span><strong id="externalFeeCount">—</strong><small id="externalFeeKrw">은행 송금 1회 1,000원 기준</small></article>
+    </section>
+
+    <section class="operation-panel panel" aria-label="자동거래 상태 진단">
+        <div class="panel-head"><div><p class="eyebrow">OPERATION DIAGNOSIS</p><h2>자동거래 상태 진단</h2></div><span id="operationBadge" class="operation-badge muted">확인 중</span></div>
+        <div class="operation-grid">
+            <article class="operation-main">
+                <span>현재 판단</span>
+                <strong id="operationLabel">—</strong>
+                <p id="operationMessage">실제 잔고와 주문 상태를 확인하고 있습니다.</p>
+            </article>
+            <article><span>원금 대비 평가액</span><strong id="operationEquityGap">—</strong><small id="operationEquity">원금/평가액 계산 중</small></article>
+            <article><span>실행 가능 후보</span><strong id="operationExecutable">—</strong><small id="operationBlocked">막힌 후보 계산 중</small></article>
+            <article><span>7일 검증</span><strong id="operationSevenDay">—</strong><small id="operationVerdict">판정 대기</small></article>
+        </div>
+        <div id="operationAction" class="operation-action">필요 조치를 계산하고 있습니다.</div>
+    </section>
+
+    <section class="capital-panel panel">
+        <div class="panel-head"><div><p class="eyebrow">CAPITAL LOG</p><h2>원금·수수료 빠른 기록</h2></div><small id="capitalStatus">텔레그램 명령과 같은 기준으로 저장됩니다.</small></div>
+        <div class="capital-guide">
+            <span>외부에서 새 돈을 넣었을 때만 원금으로 기록하세요.</span>
+            <span>업비트↔빗썸 원화 이동은 원금이 아니라 수수료만 기록하세요.</span>
+            <span>수익률은 현재 투자 원금 기준으로 자동 계산됩니다.</span>
+        </div>
+        <div class="capital-actions">
+            <form id="depositForm">
+                <label><span>추가 투자 원금</span><input id="depositAmount" type="number" min="1" max="1000000000" step="1" placeholder="예: 50000"></label>
+                <button type="submit">원금 기록</button>
+            </form>
+            <form id="feeForm">
+                <label><span>원화 이동 수수료</span><input id="feeAmount" type="number" min="1" max="10000000" step="1" value="1000" placeholder="예: 1000"></label>
+                <button type="submit">수수료 기록</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="wallet-overview" aria-label="거래소별 실제 잔고">
+        <div class="section-title-row"><div><p class="eyebrow">EXCHANGE WALLETS</p><h2>거래소별 보유 자산</h2></div><div class="asset-search"><input id="assetSearch" type="search" placeholder="코인명 검색 · 예: XRP"></div></div>
+        <div id="assetLookup" class="asset-lookup" hidden></div>
+        <div class="wallet-card-grid two-exchange-mode">
+            <article class="exchange-wallet-card" data-wallet="UPBIT"><div class="wallet-card-head"><span class="wallet-logo upbit-logo">UP</span><div><h3>업비트</h3><small>UPBIT LIVE WALLET</small></div></div><div class="wallet-krw"><span>보유 KRW</span><strong data-wallet-krw>—</strong></div><div class="wallet-meta"><span data-wallet-count>—</span><span data-wallet-updated>조회 중</span></div><div class="wallet-assets" data-wallet-assets></div></article>
+            <article class="exchange-wallet-card" data-wallet="BITHUMB"><div class="wallet-card-head"><span class="wallet-logo bithumb-logo">BT</span><div><h3>빗썸</h3><small>BITHUMB LIVE WALLET</small></div></div><div class="wallet-krw"><span>보유 KRW</span><strong data-wallet-krw>—</strong></div><div class="wallet-meta"><span data-wallet-count>—</span><span data-wallet-updated>조회 중</span></div><div class="wallet-assets" data-wallet-assets></div></article>
+            <article class="exchange-wallet-card holdings-card" data-wallet="HOLDINGS"><div class="wallet-card-head"><span class="wallet-logo holdings-logo">ALL</span><div><h3>전체 보유 코인</h3><small>UPBIT + BITHUMB</small></div></div><div class="wallet-krw"><span>전체 KRW</span><strong data-wallet-krw>—</strong></div><div class="wallet-meta"><span data-wallet-count>—</span><span>합산 수량</span></div><div class="wallet-assets" data-wallet-assets></div></article>
+        </div>
+    </section>
+
+    <section class="history-panel panel">
+        <div class="panel-head"><div><p class="eyebrow">REALIZED ARBITRAGE P&amp;L</p><h2>실제 차익거래 손익</h2></div><div class="cycle-summary"><span>오늘 <strong id="todayRealizedProfit">0원</strong></span><span>누적 <strong id="totalRealizedProfit">0원</strong></span></div></div>
+        <div class="history-scroll"><table><thead><tr><th>일시</th><th>마켓</th><th>경로</th><th>주문금액</th><th>예상손익</th><th>실현손익</th><th>상태</th><th>상세</th></tr></thead><tbody id="tradeCycleRows"><tr><td colspan="8" class="empty">완료된 차익거래가 없습니다.</td></tr></tbody></table></div>
+    </section>
+
+    <section class="history-panel panel">
+        <div class="panel-head"><div><p class="eyebrow">LIVE ORDER HISTORY</p><h2>앱에서 실행한 실제 주문</h2></div><small id="liveOrderCount">불러오는 중</small></div>
+        <form id="orderFilters" class="order-filters">
+            <input id="orderSymbolFilter" type="search" placeholder="코인 검색 · XRP">
+            <select id="orderExchangeFilter"><option value="">전체 거래소</option><option value="UPBIT">업비트</option><option value="BITHUMB">빗썸</option></select>
+            <select id="orderSideFilter"><option value="">매수·매도 전체</option><option value="BUY">매수</option><option value="SELL">매도</option></select>
+            <select id="orderSourceFilter"><option value="">전체 주문 유형</option><option value="AUTO_ARBITRAGE">자동 차익거래</option><option value="MANUAL_SEED_BUY">초기 보유 매수</option></select>
+            <button type="submit">검색</button><button id="resetOrderFilters" type="button">초기화</button>
+        </form>
+        <div class="history-scroll"><table><thead><tr><th>#</th><th>일시</th><th>거래소</th><th>마켓</th><th>구분</th><th>요청 금액</th><th>수량</th><th>상태</th><th>주문번호</th></tr></thead><tbody id="liveOrderRows"><tr><td colspan="9" class="empty">주문 기록을 불러오는 중입니다.</td></tr></tbody></table></div>
+        <div class="order-pagination"><button id="previousOrderPage" type="button">이전</button><span id="orderPageLabel">1 / 1</span><button id="nextOrderPage" type="button">다음</button></div>
+    </section>
+    <section class="liquidation-panel panel">
+        <div><p class="eyebrow">TELEGRAM APPROVAL</p><h2>전체 코인 정리</h2><p>현재 양쪽 거래소의 보유 수량을 고정한 뒤 텔레그램 승인을 받아 시장가 매도합니다. KRW와 잠긴 수량은 제외됩니다.</p></div>
+        <button id="requestLiquidation" type="button">텔레그램 전체매도 승인 요청</button>
+    </section>
+    <section class="liquidation-panel panel">
+        <div><p class="eyebrow">ACCOUNT</p><h2>회원 탈퇴</h2><p>자동매매를 정지하고 계정을 비활성화합니다. 주문·손익 기록은 금융 기록 보호를 위해 익명 상태로 보관됩니다.</p></div>
+        <button id="withdrawAccount" type="button">회원 탈퇴</button>
+    </section>
+</main>
+</body>
+</html>

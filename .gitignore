@@ -1,0 +1,13 @@
+.env
+.DS_Store
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+logs/
+target/
+data/
+data/account-credentials.key
+.idea/
+*.iml
+*.log

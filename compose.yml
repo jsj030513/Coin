@@ -1,0 +1,52 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      SPRING_H2_CONSOLE_ENABLED: "false"
+      LIVE_TRADING_ENABLED: ${LIVE_TRADING_ENABLED:-false}
+      AUTO_TRADING_ENABLED: ${AUTO_TRADING_ENABLED:-false}
+      LIVE_SEED_BUY_ENABLED: ${LIVE_SEED_BUY_ENABLED:-false}
+      LIVE_MAX_ORDER_KRW: ${LIVE_MAX_ORDER_KRW:-12000}
+      LIVE_INVENTORY_DUST_FLOOR_KRW: ${LIVE_INVENTORY_DUST_FLOOR_KRW:-6000}
+      LIVE_INVENTORY_MAX_IMBALANCE_PERCENT: "40"
+      LIVE_INVENTORY_REBALANCE_MAX_COST_PERCENT: ${LIVE_INVENTORY_REBALANCE_MAX_COST_PERCENT:-2.0}
+      LIVE_CYCLE_TIMEOUT_SECONDS: ${LIVE_CYCLE_TIMEOUT_SECONDS:-120}
+      BITHUMB_FEE_PERCENT: "0.25"
+      TELEGRAM_REBALANCE_MAX_SINGLE_EXCHANGE_KRW_RATIO_PERCENT: "75"
+      TELEGRAM_REBALANCE_MIN_TRANSFER_KRW: "30000"
+      ADMIN_BOOTSTRAP_USERNAME: ${ADMIN_BOOTSTRAP_USERNAME:-}
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-}
+    expose:
+      - "8080"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/actuator/health | grep -q UP"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>계정 복구 — ARB KOREA</title>
+
+
+    <link rel="stylesheet" href="/css/auth.css"><script src="/js/security.js"></script><script src="/js/auth.js" defer></script>
+</head>
+<body data-page="recover">
+<main class="auth-shell">
+    <section class="auth-copy"><a class="auth-brand" href="/login"><b>A//</b> ARB KOREA</a><p>ACCOUNT RECOVERY</p><h1>내 텔레그램으로<br><em>계정 찾기.</em></h1><span>등록된 개인 텔레그램으로 아이디와 6자리 복구 코드를 보냅니다.</span></section>
+    <section class="auth-card">
+        <p class="eyebrow">RECOVER ACCOUNT</p><h2>아이디·비밀번호 찾기</h2>
+        <div id="authMessage" class="auth-message" role="alert"></div>
+        <button id="requestRecoveryButton" class="standalone-button" type="button">텔레그램으로 복구 코드 받기</button>
+        <form id="recoveryForm" class="auth-form recovery-form">
+            <label><span>6자리 복구 코드</span><input id="recoveryCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required></label>
+            <label><span>새 비밀번호</span><input id="newPassword" type="password" autocomplete="new-password" minlength="10" maxlength="100" required><small>10자 이상</small></label>
+            <label><span>새 비밀번호 확인</span><input id="newPasswordConfirm" type="password" autocomplete="new-password" minlength="10" maxlength="100" required></label>
+            <button id="recoveryButton" type="submit">비밀번호 재설정</button>
+        </form>
+        <div id="recoveredAccount" class="recovered-account" hidden></div>
+        <p class="auth-switch"><a href="/login">로그인으로 돌아가기</a></p>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>거래소 계정 연결 — ARB KOREA</title>
+
+
+    <link rel="stylesheet" href="/css/app.css"><link rel="stylesheet" href="/css/accounts.css"><link rel="stylesheet" href="/css/rebalance.css"><link rel="stylesheet" href="/css/ux.css"><link rel="stylesheet" href="/css/safety.css"><script src="/js/security.js"></script><script src="/js/accounts.js" defer></script><script src="/js/safety.js" defer></script>
+</head>
+<body>
+<div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+<header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark">A//</span><span>ARB KOREA</span></a>
+    <nav class="topbar-actions" aria-label="주요 메뉴">
+        <a class="page-link" href="/">MARKET</a><a class="page-link" href="/my">MY PAGE</a><a class="page-link active" href="/accounts">ACCOUNTS</a><a class="page-link" href="/live-orders">LIVE ORDERS</a><a class="page-link" href="/security">SECURITY</a>
+        <form class="logout-form" action="/logout" method="post"><button class="page-link logout-link" type="submit">LOGOUT</button></form>
+        <div class="safety-pill"><span></span> READ ONLY</div>
+    </nav>
+</header>
+<main class="accounts-main">
+    <section class="accounts-hero">
+        <div><p class="eyebrow">PRIVATE EXCHANGE CONNECTIONS</p><h1>두 계좌,<br><em>하나의 전략으로.</em></h1><p>업비트와 빗썸 API 키를 등록하면 실제 인증 요청으로 잔고와 주문권한을 확인합니다. 키를 바꿀 때는 기존 연결을 삭제하지 않아도 새 키를 입력하면 암호화 저장값이 교체됩니다.</p></div>
+        <div class="connection-score"><span>연결 확인</span><strong id="verifiedCount">—/2</strong><small id="verifiedLabel">상태 확인 중</small></div>
+    </section>
+    <section class="security-notice">
+        <strong>권한 최소화 원칙</strong><p>자산조회·주문조회·주문하기만 필요합니다. 출금조회·출금하기·입금조회·입금하기는 사용하지 않습니다.</p>
+    </section>
+    <section class="setup-guide panel">
+        <div class="panel-head"><div><p class="eyebrow">BEFORE YOU PASTE KEYS</p><h2>API 키 등록 체크리스트</h2></div></div>
+        <div class="setup-grid">
+            <article class="setup-card ok"><strong>켜기</strong><span>자산조회</span><span>주문조회</span><span>주문하기</span></article>
+            <article class="setup-card danger"><strong>끄기</strong><span>출금조회</span><span>출금하기</span><span>입금조회 / 입금하기</span></article>
+            <article class="setup-card neutral"><strong>확인</strong><span>거래소 허용 IP 등록</span><span>키 저장 후 “다시 확인”</span><span>LIVE ORDERS에서 권한 상태 확인</span></article>
+        </div>
+        <p class="guide-copy">자동 차익거래와 신규 코인 준비 주문에만 API를 사용합니다. 출금 권한은 사용하지 않습니다.</p>
+    </section>
+    <section class="notification-settings panel">
+        <div class="panel-head">
+            <div><p class="eyebrow">PERSONAL TELEGRAM</p><h2>내 텔레그램 알림</h2></div>
+            <span id="telegramPersonalStatus" class="editable-badge">확인 중</span>
+        </div>
+        <form id="telegramSettingsForm" class="telegram-form">
+            <label><span>Telegram Chat ID</span><input id="telegramChatId" name="telegramChatId" autocomplete="off" placeholder="예: 123456789"></label>
+            <div class="telegram-checks">
+                <label><input id="telegramEnabled" type="checkbox"> 텔레그램 알림 사용</label>
+                <label><input id="opportunityEnabled" type="checkbox"> 차익 후보 알림</label>
+                <label><input id="rebalanceEnabled" type="checkbox"> KRW 리밸런싱 알림</label>
+                <label><input id="liveCandidateEnabled" type="checkbox"> 실제 잔고 주문 후보 알림</label>
+            </div>
+            <label><span>알림 쿨다운</span><div><input id="telegramCooldownSeconds" type="number" min="0" max="86400" step="60"><em>초</em></div></label>
+            <div class="telegram-actions">
+                <button id="saveTelegramSettings" type="submit">내 알림 설정 저장</button>
+                <button id="sendTelegramTest" type="button">테스트 알림</button>
+            </div>
+            <p id="telegramSettingsHint">Chat ID는 사용자별로 저장됩니다. 다른 사용자의 알림과 섞이지 않습니다.</p>
+        </form>
+    </section>
+    <section class="fee-analysis panel">
+        <div class="panel-head">
+            <div><p class="eyebrow">ACCOUNT FEE ANALYSIS</p><h2>내 실제 거래 수수료</h2></div>
+            <button id="refreshFees" type="button">지금 수수료 분석</button>
+        </div>
+        <div id="feeAnalysisRows" class="fee-analysis-grid"><p class="empty">연결된 거래소의 계정 수수료를 확인 중입니다.</p></div>
+        <p class="fee-analysis-note">매일 05:20 자동 확인하며 주문 직전에도 거래소 주문정보에서 다시 분석합니다. 변경되면 내 텔레그램으로 알려드립니다.</p>
+    </section>
+    <section id="connectionGrid" class="connection-grid" aria-label="거래소 연결 목록">
+        <article class="exchange-card" data-exchange="UPBIT"><div class="exchange-head"><span class="exchange-logo">UP</span><div><h2>Upbit</h2><small>자산조회 · 주문조회 · 주문하기</small></div><i class="status-dot"></i></div><div class="connection-state"><strong>확인 중</strong><span>—</span></div><div class="permission-pills" aria-label="권한 상태"></div><form class="key-form"><label>Access Key<input name="accessKey" autocomplete="off" required></label><label>Secret Key<input name="secretKey" type="password" autocomplete="new-password" required></label><button type="submit">새 키 저장하고 연결 확인</button></form><div class="card-actions"><button class="verify-button" type="button">다시 확인</button><button class="delete-button" type="button">연결 삭제</button></div></article>
+        <article class="exchange-card" data-exchange="BITHUMB"><div class="exchange-head"><span class="exchange-logo">BT</span><div><h2>Bithumb</h2><small>자산조회 · 주문조회 · 주문하기</small></div><i class="status-dot"></i></div><div class="connection-state"><strong>확인 중</strong><span>—</span></div><div class="permission-pills" aria-label="권한 상태"></div><form class="key-form"><label>API Key<input name="accessKey" autocomplete="off" required></label><label>Secret Key<input name="secretKey" type="password" autocomplete="new-password" required></label><button type="submit">새 키 저장하고 연결 확인</button></form><div class="card-actions"><button class="verify-button" type="button">다시 확인</button><button class="delete-button" type="button">연결 삭제</button></div></article>
+    </section>
+    <section class="live-balance-panel panel">
+        <div class="panel-head">
+            <div><p class="eyebrow">REAL BALANCE READINESS</p><h2>실제 잔고 기준 실행 가능성</h2></div>
+            <button id="refreshLiveBalances" type="button">실제 잔고 새로고침</button>
+        </div>
+        <div class="live-warning"><strong>실제 잔고 기준</strong><span>양쪽 거래소의 실제 KRW와 코인 수량으로 주문 가능 여부를 계산합니다. 자동 주문 상태는 메인 화면에서 제어합니다.</span></div>
+        <div id="liveStatusGrid" class="live-status-grid"><p class="empty">실제 잔고 조회 대기 중입니다.</p></div>
+        <div id="rebalanceCard" class="rebalance-card">
+            <div class="rebalance-head"><span>KRW REBALANCE</span><strong>조회 대기</strong></div>
+            <div class="rebalance-route">실제 KRW 잔고를 불러오면 권장 이동 방향을 계산합니다.</div>
+            <div class="rebalance-bars">
+                <div><span>UPBIT · 케이뱅크</span><strong id="upbitKrwRatio">—</strong><i><b id="upbitKrwBar"></b></i><em id="upbitKrwAmount">—</em></div>
+                <div><span>BITHUMB · KB국민은행</span><strong id="bithumbKrwRatio">—</strong><i><b id="bithumbKrwBar"></b></i><em id="bithumbKrwAmount">—</em></div>
+            </div>
+            <p id="rebalanceMessage">텔레그램 알림 조건도 이 기준으로 판단합니다.</p>
+        </div>
+        <div class="live-columns">
+            <div>
+                <h3>실제 보유 자산</h3>
+                <div id="liveBalanceRows" class="live-scroll-box"><p class="empty">연결 확인된 조회 전용 API 키가 필요합니다.</p></div>
+            </div>
+            <div>
+                <h3>차익 기회별 잔고 체크</h3>
+                <div id="liveReadinessRows" class="live-scroll-box"><p class="empty">최근 차익 기회를 불러오는 중입니다.</p></div>
+            </div>
+        </div>
+    </section>
+    <section class="connection-explainer panel"><div class="panel-head"><div><p class="eyebrow">VERIFICATION STANDARD</p><h2>연동 완료 판정 기준</h2></div></div><ol><li>키가 암호화되어 사용자 계정에 저장됨</li><li>자산조회 API가 인증 성공 응답</li><li>주문조회·주문하기 권한 상태 표시</li></ol><p>업비트와 빗썸 모두 ‘연결 확인 완료’일 때 2/2로 표시됩니다. 주문 기능은 LIVE ORDERS 페이지에서 다시 잔고와 권한을 검증한 뒤, 안전장치가 풀린 버전에서만 실행됩니다.</p></section>
+</main>
+<div id="accountToast" class="toast" role="status"></div>
+</body>
+</html>

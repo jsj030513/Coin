@@ -1,0 +1,103 @@
+.rebalance-card {
+    margin: 0 26px 24px;
+    padding: 20px;
+    border: 1px solid var(--line);
+    background: #101214;
+}
+
+.rebalance-card.alert {
+    border-color: rgba(255, 94, 94, .55);
+    box-shadow: 0 0 0 1px rgba(255, 94, 94, .12) inset;
+}
+
+.rebalance-card.safe {
+    border-color: rgba(201, 255, 67, .22);
+}
+
+.rebalance-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+}
+
+.rebalance-head span {
+    color: var(--muted);
+    font: 9px var(--mono);
+}
+
+.rebalance-head strong {
+    font-size: 13px;
+    color: var(--acid);
+}
+
+.rebalance-card.alert .rebalance-head strong {
+    color: var(--red);
+}
+
+.rebalance-route {
+    margin: 13px 0 18px;
+    color: #dce2df;
+    font: 500 15px var(--mono);
+    letter-spacing: -.03em;
+}
+
+.rebalance-bars {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.rebalance-bars div {
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, .06);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 7px 12px;
+}
+
+.rebalance-bars span,
+.rebalance-bars em {
+    color: var(--muted);
+    font: 9px var(--mono);
+}
+
+.rebalance-bars strong {
+    font: 500 12px var(--mono);
+}
+
+.rebalance-bars i {
+    grid-column: 1 / -1;
+    height: 8px;
+    overflow: hidden;
+    background: #25292b;
+}
+
+.rebalance-bars b {
+    display: block;
+    height: 100%;
+    min-width: 2px;
+    background: var(--acid);
+    transition: width .35s ease;
+}
+
+.rebalance-card.alert .rebalance-bars b {
+    background: var(--red);
+}
+
+.rebalance-bars em {
+    grid-column: 1 / -1;
+}
+
+#rebalanceMessage {
+    margin: 14px 0 0;
+    color: #8f9693;
+    font-size: 10px;
+    line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+    .rebalance-bars {
+        grid-template-columns: 1fr;
+    }
+}

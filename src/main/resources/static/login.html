@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>로그인 — ARB KOREA</title>
+
+
+    <link rel="stylesheet" href="/css/auth.css"><script src="/js/security.js"></script><script src="/js/auth.js" defer></script>
+</head>
+<body data-page="login">
+<main class="auth-shell">
+    <section class="auth-copy"><a class="auth-brand" href="/login"><b>A//</b> ARB KOREA</a><p>PRIVATE TRADING TERMINAL</p><h1>나만의 시장,<br><em>안전하게.</em></h1><span>업비트·빗썸 개인 자산과 차익거래를 관리합니다.</span></section>
+    <section class="auth-card">
+        <p class="eyebrow">WELCOME BACK</p><h2>로그인</h2>
+        <div id="authMessage" class="auth-message" role="alert"></div>
+        <form action="/login" method="post" class="auth-form">
+            <label><span>아이디</span><input name="username" autocomplete="username" required autofocus></label>
+            <label><span>비밀번호</span><input name="password" type="password" autocomplete="current-password" required></label>
+            <button type="submit">로그인</button>
+        </form>
+        <p class="auth-switch"><a href="/recover">아이디 또는 비밀번호를 잊었나요?</a></p>
+        <p class="auth-switch">처음인가요? <a href="/register">회원가입</a></p>
+    </section>
+</main>
+</body>
+</html>

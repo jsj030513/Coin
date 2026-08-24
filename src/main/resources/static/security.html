@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>비밀번호 변경 — ARB KOREA</title>
+
+
+    <link rel="stylesheet" href="/css/auth.css"><script src="/js/security.js"></script><script src="/js/auth.js" defer></script>
+</head>
+<body data-page="security">
+<main class="auth-shell">
+    <section class="auth-copy"><a class="auth-brand" href="/"><b>A//</b> ARB KOREA</a><p>ACCOUNT SECURITY</p><h1>내 계정을<br><em>단단하게.</em></h1><span>비밀번호 변경 후에는 다시 로그인합니다.</span></section>
+    <section class="auth-card">
+        <p class="eyebrow">CHANGE PASSWORD</p><h2>비밀번호 변경</h2>
+        <div id="authMessage" class="auth-message" role="alert"></div>
+        <form id="changePasswordForm" class="auth-form">
+            <label><span>현재 비밀번호</span><input id="currentPassword" type="password" autocomplete="current-password" required autofocus></label>
+            <label><span>새 비밀번호</span><input id="changedPassword" type="password" autocomplete="new-password" minlength="10" maxlength="100" required><small>10자 이상, 기존 비밀번호와 다르게</small></label>
+            <label><span>새 비밀번호 확인</span><input id="changedPasswordConfirm" type="password" autocomplete="new-password" minlength="10" maxlength="100" required></label>
+            <button id="changePasswordButton" type="submit">비밀번호 변경</button>
+        </form>
+        <p class="auth-switch"><a href="/accounts">계정 설정으로 돌아가기</a></p>
+    </section>
+</main>
+</body>
+</html>

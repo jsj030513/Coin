@@ -1,0 +1,135 @@
+spring:
+  application:
+    name: coin-arbitrage
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: jdbc:h2:file:./data/arbitrage;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  h2:
+    console:
+      enabled: false
+      path: /h2-console
+server:
+  address: ${SERVER_ADDRESS:0.0.0.0}
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  servlet:
+    session:
+      timeout: 15m
+      cookie:
+        http-only: true
+        secure: true
+        same-site: strict
+admin:
+  bootstrap-username: ${ADMIN_BOOTSTRAP_USERNAME:}
+  bootstrap-password: ${ADMIN_BOOTSTRAP_PASSWORD:}
+
+arbitrage:
+  scan-enabled: ${SCAN_ENABLED:true}
+  min-quote-volume-24h: ${MIN_QUOTE_VOLUME_24H:1000000000}
+  fee-percent: ${FEE_PERCENT:0.1}
+  min-profit-percent: ${MIN_PROFIT_PERCENT:0.3}
+  max-profit-percent: ${MAX_PROFIT_PERCENT:3.0}
+  order-amount-krw: ${ORDER_AMOUNT_KRW:5000}
+  max-order-amount-krw: ${MAX_ORDER_AMOUNT_KRW:5000}
+  daily-max-loss-krw: ${DAILY_MAX_LOSS_KRW:0}
+  max-concurrent-positions: ${MAX_CONCURRENT_POSITIONS:1}
+  scan-interval-ms: ${SCAN_INTERVAL_MS:7000}
+  opportunity-cooldown-seconds: ${OPPORTUNITY_COOLDOWN_SECONDS:120}
+  request-timeout-seconds: ${REQUEST_TIMEOUT_SECONDS:10}
+  max-retries: ${MAX_RETRIES:3}
+  enabled-exchanges: ${ENABLED_EXCHANGES:upbit,bithumb}
+
+live-trading:
+  enabled: ${LIVE_TRADING_ENABLED:false}
+  auto-enabled: ${AUTO_TRADING_ENABLED:false}
+  scan-interval-ms: ${LIVE_SCAN_INTERVAL_MS:10000}
+  seed-buy-enabled: ${LIVE_SEED_BUY_ENABLED:false}
+  min-order-krw: ${LIVE_MIN_ORDER_KRW:5000}
+  max-order-krw: ${LIVE_MAX_ORDER_KRW:12000}
+  inventory-dust-floor-krw: ${LIVE_INVENTORY_DUST_FLOOR_KRW:6000}
+  inventory-max-imbalance-percent: ${LIVE_INVENTORY_MAX_IMBALANCE_PERCENT:50}
+  inventory-rebalance-max-cost-percent: ${LIVE_INVENTORY_REBALANCE_MAX_COST_PERCENT:2.0}
+  krw-recovery-enabled: ${LIVE_KRW_RECOVERY_ENABLED:true}
+  krw-recovery-target-buffer-krw: ${LIVE_KRW_RECOVERY_TARGET_BUFFER_KRW:3000}
+  krw-recovery-cooldown-seconds: ${LIVE_KRW_RECOVERY_COOLDOWN_SECONDS:1800}
+  manual-krw-transfer-fee-krw: ${LIVE_MANUAL_KRW_TRANSFER_FEE_KRW:1000}
+  manual-krw-transfer-min-krw: ${LIVE_MANUAL_KRW_TRANSFER_MIN_KRW:20000}
+  manual-krw-transfer-round-krw: ${LIVE_MANUAL_KRW_TRANSFER_ROUND_KRW:1000}
+  cooldown-seconds: ${LIVE_ORDER_COOLDOWN_SECONDS:600}
+  cycle-timeout-seconds: ${LIVE_CYCLE_TIMEOUT_SECONDS:120}
+  max-orders-per-run: ${LIVE_MAX_ORDERS_PER_RUN:1}
+
+risk:
+  min-expected-profit-krw: ${MIN_EXPECTED_PROFIT_KRW:25}
+
+trading-health:
+  enabled-usernames: ${TRADING_HEALTH_ENABLED_USERNAMES:onlymine}
+  no-trade-alert-hours: ${TRADING_HEALTH_NO_TRADE_ALERT_HOURS:6}
+  no-trade-alert-cooldown-hours: ${TRADING_HEALTH_NO_TRADE_ALERT_COOLDOWN_HOURS:6}
+  no-trade-check-interval-ms: ${TRADING_HEALTH_NO_TRADE_CHECK_INTERVAL_MS:1800000}
+  no-trade-initial-delay-ms: ${TRADING_HEALTH_NO_TRADE_INITIAL_DELAY_MS:180000}
+  seven-day-report-cron: ${TRADING_HEALTH_SEVEN_DAY_REPORT_CRON:0 55 23 * * *}
+  report-zone: ${TRADING_HEALTH_REPORT_ZONE:Asia/Seoul}
+
+principal-protection:
+  enabled-usernames: ${PRINCIPAL_PROTECTION_ENABLED_USERNAMES:onlymine}
+  equity-buffer-krw: ${PRINCIPAL_PROTECTION_EQUITY_BUFFER_KRW:0}
+
+fees:
+  # 즉시 체결 주문 기준 taker 수수료. 계정 이벤트/플랜에 맞게 환경변수로 재정의 가능.
+  upbit: ${UPBIT_FEE_PERCENT:0.05}
+  bithumb: ${BITHUMB_FEE_PERCENT:0.25}
+  # 코인원 Open API 수수료(일반 웹/앱 기본 0.20%와 다름)
+  coinone: ${COINONE_FEE_PERCENT:0.02}
+  # 코빗 무료 플랜 taker 0.20%; 기본 플랜 사용자는 0.10으로 설정
+  korbit: ${KORBIT_FEE_PERCENT:0.20}
+
+telegram:
+  enabled: ${TELEGRAM_ENABLED:false}
+  opportunity-enabled: ${TELEGRAM_OPPORTUNITY_ENABLED:false}
+  bot-token: ${TELEGRAM_BOT_TOKEN:}
+  chat-id: ${TELEGRAM_CHAT_ID:}
+  min-profit-percent: ${TELEGRAM_MIN_PROFIT_PERCENT:0.3}
+  min-expected-profit-krw: ${TELEGRAM_MIN_EXPECTED_PROFIT_KRW:100}
+  top-n: ${TELEGRAM_TOP_N:3}
+  cooldown-seconds: ${TELEGRAM_COOLDOWN_SECONDS:3600}
+  live-candidate-cooldown-minutes: ${TELEGRAM_LIVE_CANDIDATE_COOLDOWN_MINUTES:180}
+  rebalance-enabled: ${TELEGRAM_REBALANCE_ENABLED:true}
+  rebalance-check-interval-ms: ${TELEGRAM_REBALANCE_CHECK_INTERVAL_MS:60000}
+  rebalance-max-single-exchange-krw-ratio-percent: ${TELEGRAM_REBALANCE_MAX_SINGLE_EXCHANGE_KRW_RATIO_PERCENT:75}
+  rebalance-target-single-exchange-krw-ratio-percent: ${TELEGRAM_REBALANCE_TARGET_SINGLE_EXCHANGE_KRW_RATIO_PERCENT:60}
+  rebalance-min-transfer-krw: ${TELEGRAM_REBALANCE_MIN_TRANSFER_KRW:20000}
+  rebalance-transfer-round-krw: ${TELEGRAM_REBALANCE_TRANSFER_ROUND_KRW:1000}
+  auto-portfolio-summary-interval-ms: ${TELEGRAM_AUTO_PORTFOLIO_SUMMARY_INTERVAL_MS:1800000}
+  auto-portfolio-summary-initial-delay-ms: ${TELEGRAM_AUTO_PORTFOLIO_SUMMARY_INITIAL_DELAY_MS:60000}
+  daily-profit-cron: ${TELEGRAM_DAILY_PROFIT_CRON:0 50 23 * * *}
+  daily-profit-zone: ${TELEGRAM_DAILY_PROFIT_ZONE:Asia/Seoul}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    root: INFO
+    com.coin.arbitrage: INFO
+  file:
+    name: logs/arbitrage.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 10

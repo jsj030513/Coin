@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Java 차익거래 대시보드 (Paper Only)",
+      "type": "java",
+      "request": "launch",
+      "mainClass": "com.coin.arbitrage.ArbitrageApplication",
+      "projectName": "arbitrage",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SERVER_PORT": "8080",
+        "SCAN_ENABLED": "true"
+      }
+    }
+  ]
+}
