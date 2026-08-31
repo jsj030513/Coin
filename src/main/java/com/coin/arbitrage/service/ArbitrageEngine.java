@@ -35,6 +35,7 @@ public class ArbitrageEngine {
     private final OpportunityRepository opportunities;
     private final TelegramNotificationService telegram;
     private final Executor marketExecutor;
+    private final DelistingRiskService delistingRisk;
     private final AtomicBoolean scanning = new AtomicBoolean();
     private volatile Set<String> commonSymbols = Set.of();
     private volatile Map<String, Set<String>> symbolsByExchange = Map.of();
@@ -45,7 +46,8 @@ public class ArbitrageEngine {
                            FeeProvider feeProvider,
                            OrderBookCalculator calculator, OpportunityRepository opportunities,
                            TelegramNotificationService telegram,
-                           Executor marketExecutor) {
+                           Executor marketExecutor,
+                           DelistingRiskService delistingRisk) {
         Set<String> enabled = properties.enabledExchanges().stream()
                 .map(String::toLowerCase).collect(java.util.stream.Collectors.toSet());
         this.clients = clients.stream().filter(client -> enabled.contains(client.id().toLowerCase())).toList();
@@ -55,6 +57,7 @@ public class ArbitrageEngine {
         this.opportunities = opportunities;
         this.telegram = telegram;
         this.marketExecutor = marketExecutor;
+        this.delistingRisk = delistingRisk;
         this.clientsById = new HashMap<>();
         this.clients.forEach(client -> clientsById.put(client.id(), client));
     }
@@ -137,6 +140,7 @@ public class ArbitrageEngine {
         List<Candidate> result = new ArrayList<>();
         tickers.forEach((symbol, rows) -> rows.forEach((buyId, buy) -> rows.forEach((sellId, sell) -> {
             if (buyId.equals(sellId) || !buy.valid() || !sell.valid()) return;
+            if (delistingRisk.riskyRoute(symbol, buyId, sellId)) return;
             if (Math.min(buy.quoteVolume(), sell.quoteVolume()) < settings.minQuoteVolume24h()) return;
             double rough = (sell.bid() - buy.ask()) / buy.ask() * 100
                     - feeProvider.buyFee(buyId) - feeProvider.sellFee(sellId);
@@ -184,6 +188,7 @@ public class ArbitrageEngine {
                                                   RiskSettingsService.Settings settings) {
         List<ArbitrageOpportunity> result = new ArrayList<>();
         for (Candidate candidate : candidates) {
+            if (delistingRisk.riskyRoute(candidate.symbol(), candidate.buyExchange(), candidate.sellExchange())) continue;
             OrderBookSnapshot buyBook = books.get(new BookKey(candidate.symbol(), candidate.buyExchange()));
             OrderBookSnapshot sellBook = books.get(new BookKey(candidate.symbol(), candidate.sellExchange()));
             if (buyBook == null || sellBook == null) continue;
@@ -248,6 +253,9 @@ public class ArbitrageEngine {
                                               String sellExchange, BigDecimal amountKrw) {
         String buyId = buyExchange.toLowerCase();
         String sellId = sellExchange.toLowerCase();
+        if (delistingRisk.riskyRoute(symbol, buyExchange, sellExchange)) {
+            return RevalidatedOpportunity.blocked("거래지원/출금 종료 위험 코인은 자동 차익거래에서 제외");
+        }
         ExchangeMarketClient buyClient = clientsById.get(buyId);
         ExchangeMarketClient sellClient = clientsById.get(sellId);
         if (buyClient == null || sellClient == null || amountKrw == null || amountKrw.signum() <= 0) {

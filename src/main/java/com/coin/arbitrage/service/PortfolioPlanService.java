@@ -36,6 +36,7 @@ public class PortfolioPlanService {
     private final TelegramNotificationService telegram;
     private final TradeCycleRepository tradeCycles;
     private final RiskSettingsService riskSettings;
+    private final DelistingRiskService delistingRisk;
 
     public PortfolioPlanService(OpportunityRepository opportunities, LiveBalanceService liveBalances,
                                 ExchangeConnectionRepository connections, LiveExchangeOrderService orders,
@@ -44,7 +45,8 @@ public class PortfolioPlanService {
                                 UserAccountRepository users,
                                 LiveOrderRepository liveOrders, ArbitrageEngine engine,
                                 TradingSettingsService trading, TelegramNotificationService telegram,
-                                TradeCycleRepository tradeCycles, RiskSettingsService riskSettings) {
+                                TradeCycleRepository tradeCycles, RiskSettingsService riskSettings,
+                                DelistingRiskService delistingRisk) {
         this.opportunities = opportunities;
         this.liveBalances = liveBalances;
         this.connections = connections;
@@ -58,6 +60,7 @@ public class PortfolioPlanService {
         this.telegram = telegram;
         this.tradeCycles = tradeCycles;
         this.riskSettings = riskSettings;
+        this.delistingRisk = delistingRisk;
     }
 
     public PortfolioPlan plan(String username) {
@@ -67,6 +70,8 @@ public class PortfolioPlanService {
         RiskSettingsService.Settings risk = riskSettings.get(username);
         List<OpportunityRepository.OpportunityPerformance> top = opportunities
                 .summarizeSince(since, risk.minProfitPercent(), risk.maxProfitPercent()).stream()
+                .filter(value -> !delistingRisk.risky("UPBIT", value.getSymbol()))
+                .filter(value -> !delistingRisk.risky("BITHUMB", value.getSymbol()))
                 .sorted(java.util.Comparator.comparingInt(value -> {
                     int rank = profitableSymbols.indexOf(value.getSymbol());
                     return rank < 0 ? Integer.MAX_VALUE : rank;
@@ -116,6 +121,10 @@ public class PortfolioPlanService {
         String symbol = normalizeSymbol(request.symbol());
         String exchangeName = normalizeExchange(request.exchange());
         BigDecimal amount = sanitize(request.krwAmount());
+        if (delistingRisk.risky(exchangeName, symbol)) {
+            return new SeedBuyDecision(false, delistingRisk.reason(exchangeName, symbol),
+                    symbol, exchangeName, amount, Instant.now());
+        }
         if (amount.compareTo(BigDecimal.valueOf(MIN_SEED_BUY_KRW)) < 0) {
             return new SeedBuyDecision(false, "거래소 최소 주문을 고려해 5,000원 이상만 허용합니다.", symbol, exchangeName, amount, Instant.now());
         }

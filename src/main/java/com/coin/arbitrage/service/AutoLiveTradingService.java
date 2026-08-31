@@ -32,6 +32,7 @@ public class AutoLiveTradingService {
     private final UserTradingPreferenceService preferences;
     private final ProfitAdjustmentService profitAdjustments;
     private final PrincipalProtectionService principalProtection;
+    private final DelistingRiskService delistingRisk;
     private final long manualKrwTransferFeeKrw;
     private final long manualKrwTransferMinKrw;
     private final long manualKrwTransferRoundKrw;
@@ -50,6 +51,7 @@ public class AutoLiveTradingService {
                                   UserTradingPreferenceService preferences,
                                   ProfitAdjustmentService profitAdjustments,
                                   PrincipalProtectionService principalProtection,
+                                  DelistingRiskService delistingRisk,
                                   @Value("${live-trading.manual-krw-transfer-fee-krw:1000}") long manualKrwTransferFeeKrw,
                                   @Value("${live-trading.manual-krw-transfer-min-krw:20000}") long manualKrwTransferMinKrw,
                                   @Value("${live-trading.manual-krw-transfer-round-krw:1000}") long manualKrwTransferRoundKrw) {
@@ -67,6 +69,7 @@ public class AutoLiveTradingService {
         this.preferences = preferences;
         this.profitAdjustments = profitAdjustments;
         this.principalProtection = principalProtection;
+        this.delistingRisk = delistingRisk;
         this.manualKrwTransferFeeKrw = Math.max(0, manualKrwTransferFeeKrw);
         this.manualKrwTransferMinKrw = Math.max(0, manualKrwTransferMinKrw);
         this.manualKrwTransferRoundKrw = Math.max(1, manualKrwTransferRoundKrw);
@@ -95,6 +98,7 @@ public class AutoLiveTradingService {
                 PrincipalProtectionService.Decision protection = principalProtection.decide(user.getUsername(), snapshot);
                 if (!protection.protecting() && rebalanceInventory(user.getUsername(), snapshot)) return;
                 java.util.List<LiveBalanceService.LiveOpportunityReadiness> candidates = snapshot.readiness().stream()
+                        .filter(value -> !delistingRisk.riskyRoute(value.symbol(), value.buyExchange(), value.sellExchange()))
                         .sorted(java.util.Comparator
                                 .comparing((LiveBalanceService.LiveOpportunityReadiness value) ->
                                                 krwBalanceImprovement(snapshot, value),

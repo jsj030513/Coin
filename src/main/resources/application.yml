@@ -87,6 +87,12 @@ principal-protection:
   enabled-usernames: ${PRINCIPAL_PROTECTION_ENABLED_USERNAMES:onlymine}
   equity-buffer-krw: ${PRINCIPAL_PROTECTION_EQUITY_BUFFER_KRW:0}
 
+delisting-risk:
+  upbit-symbols: ${DELISTING_RISK_UPBIT_SYMBOLS:BONK/KRW,TT/KRW}
+  bithumb-symbols: ${DELISTING_RISK_BITHUMB_SYMBOLS:}
+  monitor-interval-ms: ${DELISTING_RISK_MONITOR_INTERVAL_MS:1800000}
+  monitor-initial-delay-ms: ${DELISTING_RISK_MONITOR_INITIAL_DELAY_MS:60000}
+
 fees:
   # 즉시 체결 주문 기준 taker 수수료. 계정 이벤트/플랜에 맞게 환경변수로 재정의 가능.
   upbit: ${UPBIT_FEE_PERCENT:0.05}

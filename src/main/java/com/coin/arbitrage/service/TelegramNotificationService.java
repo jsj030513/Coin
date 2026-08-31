@@ -542,6 +542,24 @@ public class TelegramNotificationService {
                 """.formatted(message, principalKrw, equityKrw, shortageKrw)));
     }
 
+    public void notifyDelistingRisk(String username, String exchange, String symbol, long estimatedValueKrw) {
+        if (!configured(username)) return;
+        CompletableFuture.runAsync(() -> send(username, """
+                [거래 정지 위험 코인 정리 필요]
+
+                거래지원/출금 종료 위험 목록에 있는 코인을 보유 중입니다.
+
+                거래소: %s
+                코인: %s
+                현재 추정 평가액: %,d원
+
+                자동 차익거래와 신규 매수 대상에서는 즉시 제외했습니다.
+                거래/출금이 완전히 막히기 전에 거래소 공지와 실제 보유 수량을 확인하고 정리하세요.
+
+                정리성 매도는 웹의 텔레그램 전체매도 승인 기능을 이용해 직접 승인 후 진행하는 방식이 안전합니다.
+                """.formatted(exchange, symbol, estimatedValueKrw)));
+    }
+
     public void sendExternalFeeRecorded(String username, long amountKrw, java.math.BigDecimal todayTotalKrw) {
         if (!configured(username)) return;
         CompletableFuture.runAsync(() -> send(username, """
