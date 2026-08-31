@@ -18,19 +18,25 @@ import org.springframework.stereotype.Service;
 public class LiveOrderHistoryService {
     private final LiveOrderRepository orders;
     private final UserAccountRepository users;
+    private final TelegramNotificationService telegram;
 
-    public LiveOrderHistoryService(LiveOrderRepository orders, UserAccountRepository users) {
+    public LiveOrderHistoryService(LiveOrderRepository orders, UserAccountRepository users,
+                                   TelegramNotificationService telegram) {
         this.orders = orders;
         this.users = users;
+        this.telegram = telegram;
     }
 
     public LiveOrderEntity record(String username, String side, BigDecimal requestedKrw,
                                   String source, OrderResult result) {
         UserAccountEntity user = users.findByUsername(username)
                 .orElseThrow(() -> new IllegalStateException("사용자를 찾을 수 없습니다."));
-        return orders.save(new LiveOrderEntity(user, result.exchange(), result.symbol(), side,
+        LiveOrderEntity saved = orders.save(new LiveOrderEntity(user, result.exchange(), result.symbol(), side,
                 result.orderId(), zeroIfNull(requestedKrw), zeroIfNull(result.quantity()),
                 zeroIfNull(result.executedPrice()), result.status(), source));
+        telegram.notifyLiveOrderSubmitted(username, side, zeroIfNull(requestedKrw)
+                .setScale(0, java.math.RoundingMode.DOWN).longValue(), source, result);
+        return saved;
     }
 
     public List<LiveOrderEntity> recent(String username) {

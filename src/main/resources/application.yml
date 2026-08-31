@@ -111,7 +111,7 @@ telegram:
   min-expected-profit-krw: ${TELEGRAM_MIN_EXPECTED_PROFIT_KRW:100}
   top-n: ${TELEGRAM_TOP_N:3}
   cooldown-seconds: ${TELEGRAM_COOLDOWN_SECONDS:3600}
-  live-candidate-cooldown-minutes: ${TELEGRAM_LIVE_CANDIDATE_COOLDOWN_MINUTES:180}
+  live-candidate-cooldown-minutes: ${TELEGRAM_LIVE_CANDIDATE_COOLDOWN_MINUTES:60}
   rebalance-enabled: ${TELEGRAM_REBALANCE_ENABLED:true}
   rebalance-check-interval-ms: ${TELEGRAM_REBALANCE_CHECK_INTERVAL_MS:60000}
   rebalance-max-single-exchange-krw-ratio-percent: ${TELEGRAM_REBALANCE_MAX_SINGLE_EXCHANGE_KRW_RATIO_PERCENT:75}

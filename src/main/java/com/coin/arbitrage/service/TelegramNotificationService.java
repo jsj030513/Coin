@@ -205,6 +205,31 @@ public class TelegramNotificationService {
         autoPortfolioSummaries.computeIfAbsent(username, ignored -> new ConcurrentLinkedQueue<>()).add(message);
     }
 
+    public void notifyLiveOrderSubmitted(String username, String side, long requestedKrw,
+                                         String source, com.coin.arbitrage.domain.OrderResult result) {
+        if (!configured(username)) return;
+        CompletableFuture.runAsync(() -> send(username, """
+                [실제 주문 완료]
+
+                매수/매도 주문이 거래소에 접수되었습니다.
+
+                구분: %s
+                거래소: %s
+                코인: %s
+                주문 유형: %s
+                요청 금액: %,d원
+                수량: %s
+                체결/주문 상태: %s
+                주문번호: %s
+
+                실제 최종 체결 손익은 체결 확인 후 손익 내역에 반영됩니다.
+                """.formatted(
+                "BUY".equalsIgnoreCase(side) ? "매수" : "매도",
+                result.exchange(), result.symbol(), source,
+                requestedKrw, result.quantity() == null ? "0" : result.quantity().stripTrailingZeros().toPlainString(),
+                result.status(), result.orderId())));
+    }
+
     @Scheduled(
             fixedDelayString = "${telegram.auto-portfolio-summary-interval-ms:300000}",
             initialDelayString = "${telegram.auto-portfolio-summary-initial-delay-ms:60000}")
