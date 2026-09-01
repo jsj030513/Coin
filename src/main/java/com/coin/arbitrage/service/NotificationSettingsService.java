@@ -5,6 +5,7 @@ import com.coin.arbitrage.persistence.NotificationSettingsRepository;
 import com.coin.arbitrage.persistence.UserAccountEntity;
 import com.coin.arbitrage.persistence.UserAccountRepository;
 import java.time.Instant;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,6 +49,12 @@ public class NotificationSettingsService {
         return settings.findByUserUsername(username)
                 .map(NotificationSettingsEntity::getTelegramChatId)
                 .orElse("");
+    }
+
+    public Optional<String> usernameByTelegramChatId(String chatId) {
+        if (chatId == null || chatId.isBlank()) return Optional.empty();
+        return settings.findByTelegramChatIdAndTelegramEnabledTrue(chatId)
+                .map(value -> value.getUser().getUsername());
     }
 
     @Transactional

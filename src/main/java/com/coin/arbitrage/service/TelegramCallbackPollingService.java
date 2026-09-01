@@ -7,6 +7,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,6 +25,8 @@ public class TelegramCallbackPollingService {
     private final PrincipalDepositService principalDeposits;
     private final TelegramNotificationService telegram;
     private final PortfolioOnboardingService onboarding;
+    private final NotificationSettingsService notificationSettings;
+    private final DelistingRiskService delistingRisk;
     private final ObjectMapper json;
     private final boolean enabled;
     private final String botToken;
@@ -30,7 +34,9 @@ public class TelegramCallbackPollingService {
     public TelegramCallbackPollingService(TelegramTradeApprovalService approvals,
                                           ExternalFeeService externalFees,
                                           PrincipalDepositService principalDeposits,
-                                          TelegramNotificationService telegram, PortfolioOnboardingService onboarding, ObjectMapper json,
+                                          TelegramNotificationService telegram, PortfolioOnboardingService onboarding,
+                                          NotificationSettingsService notificationSettings,
+                                          DelistingRiskService delistingRisk, ObjectMapper json,
                                           @Value("${telegram.enabled:false}") boolean enabled,
                                           @Value("${telegram.bot-token:}") String botToken) {
         this.approvals = approvals;
@@ -38,6 +44,8 @@ public class TelegramCallbackPollingService {
         this.principalDeposits = principalDeposits;
         this.telegram = telegram;
         this.onboarding = onboarding;
+        this.notificationSettings = notificationSettings;
+        this.delistingRisk = delistingRisk;
         this.json = json;
         this.enabled = enabled;
         this.botToken = botToken == null ? "" : botToken.trim();
@@ -87,7 +95,8 @@ public class TelegramCallbackPollingService {
     private void handleTextMessage(long updateId, JsonNode message) {
         String text = message.path("text").asText("").trim();
         if (handleFeeMessage(updateId, message, text)) return;
-        handleDepositMessage(updateId, message, text);
+        if (handleDepositMessage(updateId, message, text)) return;
+        handleRiskLiquidationMessage(message, text);
     }
 
     private boolean handleFeeMessage(long updateId, JsonNode message, String text) {
@@ -106,11 +115,11 @@ public class TelegramCallbackPollingService {
         return true;
     }
 
-    private void handleDepositMessage(long updateId, JsonNode message, String text) {
+    private boolean handleDepositMessage(long updateId, JsonNode message, String text) {
         java.util.regex.Matcher matcher = java.util.regex.Pattern
                 .compile("^(?:입금|원금|/deposit)\\s+([0-9,]+)\\s*원?$", java.util.regex.Pattern.CASE_INSENSITIVE)
                 .matcher(text);
-        if (!matcher.matches()) return;
+        if (!matcher.matches()) return false;
         String chatId = message.path("chat").path("id").asText("");
         try {
             long amount = Long.parseLong(matcher.group(1).replace(",", ""));
@@ -118,6 +127,32 @@ public class TelegramCallbackPollingService {
             telegram.sendPrincipalDepositRecorded(result.username(), amount, result.todayTotalKrw(), result.totalKrw());
         } catch (RuntimeException error) {
             telegram.sendPrincipalDepositError(chatId, error.getMessage());
+        }
+        return true;
+    }
+
+    private void handleRiskLiquidationMessage(JsonNode message, String text) {
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("^([A-Za-z0-9]{2,12})(?:/KRW)?\\s*정리$", java.util.regex.Pattern.CASE_INSENSITIVE)
+                .matcher(text);
+        if (!matcher.matches()) return;
+        String chatId = message.path("chat").path("id").asText("");
+        String symbol = matcher.group(1).trim().toUpperCase(Locale.ROOT) + "/KRW";
+        if (!delistingRisk.risky("UPBIT", symbol) && !delistingRisk.risky("BITHUMB", symbol)) {
+            telegram.sendTelegramCommandResult(chatId, "위험 코인 정리 보류",
+                    symbol + "은(는) 현재 거래정지 위험 목록에 없습니다.\n"
+                            + "오입력 방지를 위해 텔레그램 정리 명령은 위험 목록 코인에만 동작합니다.");
+            return;
+        }
+        try {
+            String username = notificationSettings.usernameByTelegramChatId(chatId)
+                    .orElseThrow(() -> new IllegalStateException("텔레그램 알림이 연결된 계정을 찾을 수 없습니다."));
+            approvals.requestLiquidation(username, Set.of("UPBIT|" + symbol, "BITHUMB|" + symbol));
+            telegram.sendTelegramCommandResult(chatId, "위험 코인 정리 승인 요청",
+                    symbol + " 정리 승인 요청을 보냈습니다.\n"
+                            + "승인 버튼을 누르면 해당 코인만 시장가 정리합니다. 5천원 미만이면 보충 매수 후 매도 로직을 적용합니다.");
+        } catch (RuntimeException error) {
+            telegram.sendTelegramCommandResult(chatId, "위험 코인 정리 오류", error.getMessage());
         }
     }
 

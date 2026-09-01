@@ -92,6 +92,15 @@ delisting-risk:
   bithumb-symbols: ${DELISTING_RISK_BITHUMB_SYMBOLS:}
   monitor-interval-ms: ${DELISTING_RISK_MONITOR_INTERVAL_MS:1800000}
   monitor-initial-delay-ms: ${DELISTING_RISK_MONITOR_INITIAL_DELAY_MS:60000}
+  notice-enabled: ${DELISTING_RISK_NOTICE_ENABLED:true}
+  notice-check-interval-ms: ${DELISTING_RISK_NOTICE_CHECK_INTERVAL_MS:86400000}
+  notice-check-initial-delay-ms: ${DELISTING_RISK_NOTICE_CHECK_INITIAL_DELAY_MS:120000}
+  upbit-notice-pages: ${DELISTING_RISK_UPBIT_NOTICE_PAGES:30}
+  upbit-notice-per-page: ${DELISTING_RISK_UPBIT_NOTICE_PER_PAGE:30}
+  upbit-notice-url-template: ${DELISTING_RISK_UPBIT_NOTICE_URL_TEMPLATE:https://api-manager.upbit.com/api/v1/announcements?os=web&page=%d&per_page=%d&category=trade}
+  upbit-zendesk-fallback-enabled: ${DELISTING_RISK_UPBIT_ZENDESK_FALLBACK_ENABLED:false}
+  upbit-zendesk-search-url-template: ${DELISTING_RISK_UPBIT_ZENDESK_SEARCH_URL_TEMPLATE:https://upbitcs.zendesk.com/api/v2/help_center/articles/search.json?query=%s&per_page=30}
+  bithumb-notice-url: ${DELISTING_RISK_BITHUMB_NOTICE_URL:https://api.bithumb.com/v1/notices?count=20}
 
 fees:
   # 즉시 체결 주문 기준 taker 수수료. 계정 이벤트/플랜에 맞게 환경변수로 재정의 가능.

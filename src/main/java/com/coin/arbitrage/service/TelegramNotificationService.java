@@ -581,8 +581,11 @@ public class TelegramNotificationService {
                 자동 차익거래와 신규 매수 대상에서는 즉시 제외했습니다.
                 거래/출금이 완전히 막히기 전에 거래소 공지와 실제 보유 수량을 확인하고 정리하세요.
 
-                정리성 매도는 웹의 텔레그램 전체매도 승인 기능을 이용해 직접 승인 후 진행하는 방식이 안전합니다.
-                """.formatted(exchange, symbol, estimatedValueKrw)));
+                이 코인을 정리하려면 텔레그램에 아래처럼 보내세요.
+                %s 정리
+
+                그러면 해당 코인만 매도 승인 요청을 다시 보내고, 승인 버튼을 눌렀을 때만 정리 주문을 넣습니다.
+                """.formatted(exchange, symbol, estimatedValueKrw, symbol.replace("/KRW", ""))));
     }
 
     public void sendExternalFeeRecorded(String username, long amountKrw, java.math.BigDecimal todayTotalKrw) {
@@ -623,6 +626,12 @@ public class TelegramNotificationService {
         notificationSettings.findByTelegramChatIdAndTelegramEnabledTrue(chatId)
                 .ifPresent(value -> CompletableFuture.runAsync(() -> send(
                         value.getUser().getUsername(), "[수수료 입력 오류]\n\n" + message)));
+    }
+
+    public void sendTelegramCommandResult(String chatId, String title, String message) {
+        notificationSettings.findByTelegramChatIdAndTelegramEnabledTrue(chatId)
+                .ifPresent(value -> CompletableFuture.runAsync(() -> send(
+                        value.getUser().getUsername(), "[" + title + "]\n\n" + message)));
     }
 
     public void notifyFeeChanged(String username,String exchange,Double oldBuy,Double oldSell,Double newBuy,Double newSell) {

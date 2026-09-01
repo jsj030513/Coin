@@ -11,7 +11,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class DelistingRiskService {
-    private final Map<String, Set<String>> blockedByExchange;
+    private final Map<String, Set<String>> configuredBlockedByExchange;
+    private final Map<String, Set<String>> noticeBlockedByExchange = new ConcurrentHashMap<>();
     private final Map<String, Instant> lastAlertAt = new ConcurrentHashMap<>();
     private final TelegramNotificationService telegram;
 
@@ -19,15 +20,17 @@ public class DelistingRiskService {
                                 @Value("${delisting-risk.upbit-symbols:BONK/KRW,TT/KRW}") String upbitSymbols,
                                 @Value("${delisting-risk.bithumb-symbols:}") String bithumbSymbols) {
         this.telegram = telegram;
-        this.blockedByExchange = Map.of(
+        this.configuredBlockedByExchange = Map.of(
                 "UPBIT", parse(upbitSymbols),
                 "BITHUMB", parse(bithumbSymbols)
         );
     }
 
     public boolean risky(String exchange, String symbol) {
-        return blockedByExchange.getOrDefault(normalizeExchange(exchange), Set.of())
-                .contains(normalizeSymbol(symbol));
+        String normalizedExchange = normalizeExchange(exchange);
+        String normalizedSymbol = normalizeSymbol(symbol);
+        return configuredBlockedByExchange.getOrDefault(normalizedExchange, Set.of()).contains(normalizedSymbol)
+                || noticeBlockedByExchange.getOrDefault(normalizedExchange, Set.of()).contains(normalizedSymbol);
     }
 
     public boolean riskyRoute(String symbol, String buyExchange, String sellExchange) {
@@ -48,6 +51,23 @@ public class DelistingRiskService {
         if (previous != null && previous.plusSeconds(6 * 60 * 60).isAfter(now)) return;
         lastAlertAt.put(key, now);
         telegram.notifyDelistingRisk(username, normalizeExchange(exchange), normalizeSymbol(symbol), estimatedValueKrw);
+    }
+
+    public void replaceNoticeDetected(String exchange, Set<String> symbols) {
+        String normalizedExchange = normalizeExchange(exchange);
+        Set<String> normalizedSymbols = symbols == null ? Set.of() : symbols.stream()
+                .map(DelistingRiskService::normalizeSymbol)
+                .filter(item -> !item.isBlank())
+                .collect(Collectors.toUnmodifiableSet());
+        noticeBlockedByExchange.put(normalizedExchange, normalizedSymbols);
+    }
+
+    public Set<String> riskySymbols(String exchange) {
+        String normalizedExchange = normalizeExchange(exchange);
+        java.util.HashSet<String> result = new java.util.HashSet<>();
+        result.addAll(configuredBlockedByExchange.getOrDefault(normalizedExchange, Set.of()));
+        result.addAll(noticeBlockedByExchange.getOrDefault(normalizedExchange, Set.of()));
+        return Set.copyOf(result);
     }
 
     private static Set<String> parse(String value) {
