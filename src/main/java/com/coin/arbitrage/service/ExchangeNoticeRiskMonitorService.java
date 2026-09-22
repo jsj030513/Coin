@@ -8,13 +8,13 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,20 +22,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
 
 @Service
 public class ExchangeNoticeRiskMonitorService {
     private static final Logger log = LoggerFactory.getLogger(ExchangeNoticeRiskMonitorService.class);
-    private static final Pattern JSON_TEXT_FIELD = Pattern.compile(
-            "\"(?:title|subject|content|body|text|category)\"\\s*:\\s*\"((?:\\\\.|[^\"\\\\])*)\"",
-            Pattern.CASE_INSENSITIVE);
-    private static final Pattern PAREN_SYMBOL = Pattern.compile("\\(([A-Z0-9]{2,12})\\)");
-    private static final Pattern MARKET_SYMBOL = Pattern.compile("\\b(?:KRW[-_/])([A-Z0-9]{2,12})\\b|\\b([A-Z0-9]{2,12})(?:[-_/]KRW)\\b");
-    private static final Pattern BARE_SYMBOL = Pattern.compile("\\b[A-Z0-9]{2,12}\\b");
-    private static final Set<String> STOPWORDS = Set.of(
-            "KRW", "BTC", "USDT", "USD", "API", "HTTP", "HTTPS", "WEB", "OPEN", "OPENAPI",
-            "NFT", "ETF", "VIP", "PC", "IOS", "AOS", "UTC", "KST", "IP", "AI"
-    );
+    private static final Pattern PAREN_SYMBOL = Pattern.compile("\\(([A-Z][A-Z0-9]{0,11})\\)");
     private final HttpClient http;
     private final ObjectMapper json;
     private final DelistingRiskService delistingRisk;
@@ -90,13 +82,10 @@ public class ExchangeNoticeRiskMonitorService {
             log.warn("{} notice body was empty. Existing configured risk symbols remain active.", exchange);
             return;
         }
-        Set<String> detected = riskySymbolsFromNoticeBody(body);
-        delistingRisk.replaceNoticeDetected(exchange, detected);
-        if (!detected.isEmpty()) {
-            log.warn("Delisting/trading-risk symbols detected from {} notices: {}", exchange, detected);
-        } else {
-            log.info("No delisting/trading-risk symbols detected from {} notices", exchange);
-        }
+        NoticeChanges changes = noticeChanges(body);
+        delistingRisk.applyNoticeChanges(exchange, changes.added(), changes.released());
+        if (!changes.added().isEmpty() || !changes.released().isEmpty())
+            log.info("{} notice risk changes: added={}, released={}", exchange, changes.added(), changes.released());
     }
 
     private String fetchUpbitNotices() {
@@ -202,59 +191,52 @@ public class ExchangeNoticeRiskMonitorService {
     }
 
     Set<String> riskySymbolsFromNoticeBody(String body) {
-        Set<String> result = new HashSet<>();
-        Matcher matcher = JSON_TEXT_FIELD.matcher(body);
-        while (matcher.find()) {
-            String text = decodeJsonString(matcher.group(1));
-            if (riskNotice(text)) result.addAll(extractSymbols(text));
-        }
-        return Set.copyOf(result);
+        return noticeChanges(body).added();
     }
 
-    private boolean riskNotice(String text) {
-        String value = text == null ? "" : text.replace(" ", "");
-        if (value.isBlank()) return false;
-        if (value.contains("입출금일시중단") || value.contains("입출금중단")) {
-            return value.contains("거래지원종료") || value.contains("상장폐지") || value.contains("출금지원종료");
+    NoticeChanges noticeChanges(String body) {
+        ArrayList<NoticeEvent> events = new ArrayList<>();
+        try {
+            List<String> documents = body.stripLeading().startsWith("[")
+                    ? List.of(body) : body.lines().filter(value -> !value.isBlank()).toList();
+            for (String line : documents) {
+                JsonNode root = json.readTree(line);
+                JsonNode notices = root.isArray() ? root : root.has("data") ? root.path("data").path("notices") : json.readTree("[" + line + "]");
+                for (JsonNode notice : notices) {
+                String title = notice.path("title").asText("");
+                String compact = title.replaceAll("\\s+", "");
+                boolean released = compact.contains("유의종목지정해제") || compact.contains("투자유의종목지정해제")
+                        || compact.contains("거래유의종목지정해제");
+                boolean risky = compact.contains("거래지원종료") || compact.contains("거래유의종목지정")
+                        || compact.contains("투자유의종목지정") || compact.contains("유의종목지정")
+                        || compact.contains("유의종목지정기간연장") || compact.contains("출금지원종료");
+                if (!released && !risky) continue;
+                // A notice can name both newly designated and released assets. Avoid guessing in that case.
+                if (released && (compact.contains("및") || compact.contains("·"))) continue;
+                Set<String> symbols = extractSymbols(title);
+                String date = notice.path("published_at").asText(notice.path("listed_at").asText(""));
+                for (String symbol : symbols) events.add(new NoticeEvent(date, symbol, !released));
+                }
+            }
+        } catch (Exception error) {
+            throw new IllegalArgumentException("Unable to parse exchange notices", error);
         }
-        return value.contains("거래지원종료")
-                || value.contains("거래유의")
-                || value.contains("투자유의")
-                || value.contains("유의종목")
-                || value.contains("상장폐지")
-                || value.contains("출금지원종료")
-                || value.contains("입출금종료")
-                || value.contains("마켓종료")
-                || value.contains("거래종료");
+        events.sort(Comparator.comparing(NoticeEvent::date));
+        java.util.Map<String, Boolean> latest = new java.util.HashMap<>();
+        for (NoticeEvent event : events) latest.put(event.symbol(), event.risky());
+        Set<String> added = new HashSet<>();
+        Set<String> released = new HashSet<>();
+        latest.forEach((symbol, risky) -> { if (risky) added.add(symbol); else released.add(symbol); });
+        return new NoticeChanges(Set.copyOf(added), Set.copyOf(released));
     }
 
     private Set<String> extractSymbols(String text) {
         Set<String> symbols = new HashSet<>();
-        addMatches(symbols, PAREN_SYMBOL.matcher(text), 1);
-        Matcher market = MARKET_SYMBOL.matcher(text);
-        while (market.find()) {
-            addSymbol(symbols, market.group(1) == null ? market.group(2) : market.group(1));
-        }
-        Matcher bare = BARE_SYMBOL.matcher(text);
-        while (bare.find()) addSymbol(symbols, bare.group());
+        java.util.regex.Matcher matcher = PAREN_SYMBOL.matcher(text);
+        while (matcher.find()) symbols.add(matcher.group(1).toUpperCase(Locale.ROOT) + "/KRW");
         return symbols;
     }
 
-    private void addMatches(Set<String> symbols, Matcher matcher, int group) {
-        while (matcher.find()) addSymbol(symbols, matcher.group(group));
-    }
-
-    private void addSymbol(Set<String> symbols, String symbol) {
-        String value = symbol == null ? "" : symbol.trim().toUpperCase(Locale.ROOT);
-        if (value.length() < 2 || STOPWORDS.contains(value)) return;
-        symbols.add(value + "/KRW");
-    }
-
-    private String decodeJsonString(String escaped) {
-        try {
-            return json.readTree("\"" + escaped + "\"").asText("");
-        } catch (Exception ignored) {
-            return escaped.replace("\\/", "/");
-        }
-    }
+    record NoticeChanges(Set<String> added, Set<String> released) {}
+    private record NoticeEvent(String date, String symbol, boolean risky) {}
 }

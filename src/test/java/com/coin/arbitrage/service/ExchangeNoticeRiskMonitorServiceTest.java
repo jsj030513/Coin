@@ -23,4 +23,21 @@ class ExchangeNoticeRiskMonitorServiceTest {
         assertThat(service.riskySymbolsFromNoticeBody(body))
                 .containsExactlyInAnyOrder("BONK/KRW", "TT/KRW", "MIRA/KRW");
     }
+
+    @Test
+    void latestReleaseRemovesOnlyItsNamedSymbol() {
+        ExchangeNoticeRiskMonitorService service = new ExchangeNoticeRiskMonitorService(
+                HttpClient.newHttpClient(), new ObjectMapper(), null,
+                true, 1, 30, "https://example.test/%d/%d",
+                false, "https://example.test/search?q=%s", "https://example.test");
+        String body = """
+                [{"published_at":"2026-09-14 17:00:00","title":"바운스빗(BB) 거래유의종목 지정 해제"},
+                 {"published_at":"2026-08-21 17:00:00","title":"바운스빗(BB), 갈라(GALA) 거래유의종목 지정"},
+                 {"published_at":"2026-09-18 17:00:00","title":"달오픈네트워크(D), 훅트프로토콜(HOOK) 거래유의종목 지정"},
+                 {"published_at":"2026-09-20 12:00:00","title":"페치(FET) 입출금 일시 중단 안내"}]
+                """;
+        ExchangeNoticeRiskMonitorService.NoticeChanges changes = service.noticeChanges(body);
+        assertThat(changes.added()).containsExactlyInAnyOrder("GALA/KRW", "D/KRW", "HOOK/KRW");
+        assertThat(changes.released()).containsExactly("BB/KRW");
+    }
 }
